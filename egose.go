@@ -8,6 +8,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/joho/godotenv"
+	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -52,7 +53,7 @@ func main() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"User", "Text", "URL"})
 	for _, tweet := range search.Statuses {
-		table.Append([]string{tweet.User.Name, tweet.Text, tweetURL(tweet)})
+		table.Append([]string{tweet.User.Name, runewidth.Truncate(tweet.Text, 80, "..."), tweetURL(tweet)})
 	}
 	table.Render()
 }
