@@ -8,6 +8,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/joho/godotenv"
+	"github.com/olekukonko/tablewriter"
 )
 
 func tweetURL(tweet twitter.Tweet) string {
@@ -48,7 +49,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"User", "Text", "URL"})
 	for _, tweet := range search.Statuses {
-		fmt.Printf("%v: %v( %v )\n", tweet.User.Name, tweet.Text, tweetURL(tweet))
+		table.Append([]string{tweet.User.Name, tweet.Text, tweetURL(tweet)})
 	}
+	table.Render()
 }
