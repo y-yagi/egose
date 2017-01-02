@@ -52,6 +52,24 @@ func buildTwitterClient(cfg *config) *twitter.Client {
 	return twitter.NewClient(httpClient)
 }
 
+func getTimelineTweets(client *twitter.Client, count int) ([]twitter.Tweet, error) {
+	tweets, _, err := client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+		Count: count,
+	})
+	return tweets, err
+}
+
+func searchTweets(client *twitter.Client, count int, query string) ([]twitter.Tweet, error) {
+	search, _, err := client.Search.Tweets(&twitter.SearchTweetParams{
+		Query: query,
+		Count: count,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return search.Statuses, nil
+}
+
 func main() {
 	config, err := loadConfig()
 
@@ -63,7 +81,6 @@ func main() {
 	var query string
 	var count int
 	var tweets []twitter.Tweet
-	var search *twitter.Search
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.IntVar(&count, "c", 10, "Search count")
@@ -72,23 +89,14 @@ func main() {
 	client := buildTwitterClient(config)
 
 	if len(query) == 0 {
-		tweets, _, err = client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-			Count: count,
-		})
-		if err != nil {
-			fmt.Printf("twitter API Error:%v\n", err)
-			os.Exit(1)
-		}
+		tweets, err = getTimelineTweets(client, count)
 	} else {
-		search, _, err = client.Search.Tweets(&twitter.SearchTweetParams{
-			Query: query,
-			Count: count,
-		})
-		if err != nil {
-			fmt.Printf("twitter API Error:%v\n", err)
-			os.Exit(1)
-		}
-		tweets = search.Statuses
+		tweets, err = searchTweets(client, count, query)
+	}
+
+	if err != nil {
+		fmt.Printf("twitter API Error:%v\n", err)
+		os.Exit(1)
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
