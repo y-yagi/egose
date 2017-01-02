@@ -3,23 +3,52 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
+
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
-	"github.com/joho/godotenv"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 )
+
+type config struct {
+	TwitterConsumerKey    string `yaml:"twitterConsumerKey"`
+	TwitterConsumerSecret string `yaml:"twitterConsumerSecret"`
+	TwitterAccessToken    string `yaml:"twitterAccessToken"`
+	TwitterAccessSecret   string `yaml:"twitterAccessSecret"`
+}
+
+func loadConfig() (*config, error) {
+	home := os.Getenv("HOME")
+	if home == "" && runtime.GOOS == "windows" {
+		home = os.Getenv("APPDATA")
+	}
+
+	fname := filepath.Join(home, ".config", "egose", "config.yml")
+	buf, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg config
+	err = yaml.Unmarshal(buf, &cfg)
+	return &cfg, err
+}
 
 func tweetURL(tweet twitter.Tweet) string {
 	return fmt.Sprintf("https://twitter.com/%v/status/%v", tweet.User.ScreenName, tweet.ID)
 }
 
 func main() {
-	err := godotenv.Load()
+	config, err := loadConfig()
+
 	if err != nil {
-		fmt.Println("Error loading .env file")
+		fmt.Printf("Config file load Error: %v\nPlease create a config file.\n", err)
 		os.Exit(1)
 	}
 
@@ -34,9 +63,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	config := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
-	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
-	httpClient := config.Client(oauth1.NoContext, token)
+	oauthConfig := oauth1.NewConfig(config.TwitterConsumerKey, config.TwitterConsumerSecret)
+	token := oauth1.NewToken(config.TwitterAccessToken, config.TwitterAccessSecret)
+	httpClient := oauthConfig.Client(oauth1.NoContext, token)
 
 	client := twitter.NewClient(httpClient)
 
