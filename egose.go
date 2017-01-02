@@ -44,6 +44,14 @@ func tweetURL(tweet twitter.Tweet) string {
 	return fmt.Sprintf("https://twitter.com/%v/status/%v", tweet.User.ScreenName, tweet.ID)
 }
 
+func buildTwitterClient(cfg *config) *twitter.Client {
+	oauthConfig := oauth1.NewConfig(cfg.TwitterConsumerKey, cfg.TwitterConsumerSecret)
+	token := oauth1.NewToken(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
+	httpClient := oauthConfig.Client(oauth1.NoContext, token)
+
+	return twitter.NewClient(httpClient)
+}
+
 func main() {
 	config, err := loadConfig()
 
@@ -61,11 +69,7 @@ func main() {
 	flag.IntVar(&count, "c", 10, "Search count")
 	flag.Parse()
 
-	oauthConfig := oauth1.NewConfig(config.TwitterConsumerKey, config.TwitterConsumerSecret)
-	token := oauth1.NewToken(config.TwitterAccessToken, config.TwitterAccessSecret)
-	httpClient := oauthConfig.Client(oauth1.NoContext, token)
-
-	client := twitter.NewClient(httpClient)
+	client := buildTwitterClient(config)
 
 	if len(query) == 0 {
 		tweets, _, err = client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
