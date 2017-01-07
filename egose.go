@@ -59,6 +59,14 @@ func getTimelineTweets(client *twitter.Client, count int) ([]twitter.Tweet, erro
 	return tweets, err
 }
 
+func getUserTimelineTweets(client *twitter.Client, screenName string, count int) ([]twitter.Tweet, error) {
+	tweets, _, err := client.Timelines.UserTimeline(&twitter.UserTimelineParams{
+		ScreenName: screenName,
+		Count:      count,
+	})
+	return tweets, err
+}
+
 func searchTweets(client *twitter.Client, count int, query string) ([]twitter.Tweet, error) {
 	search, _, err := client.Search.Tweets(&twitter.SearchTweetParams{
 		Query: query,
@@ -79,19 +87,23 @@ func main() {
 	}
 
 	var query string
+	var user string
 	var count int
 	var tweets []twitter.Tweet
 
 	flag.StringVar(&query, "q", "", "Search query")
+	flag.StringVar(&user, "u", "", "Show user timeline")
 	flag.IntVar(&count, "c", 10, "Search count")
 	flag.Parse()
 
 	client := buildTwitterClient(config)
 
-	if len(query) == 0 {
-		tweets, err = getTimelineTweets(client, count)
-	} else {
+	if len(query) > 0 {
 		tweets, err = searchTweets(client, count, query)
+	} else if len(user) > 0 {
+		tweets, err = getUserTimelineTweets(client, user, count)
+	} else {
+		tweets, err = getTimelineTweets(client, count)
 	}
 
 	if err != nil {
