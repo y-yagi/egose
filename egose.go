@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -114,7 +115,7 @@ func main() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"User", "Text", "URL"})
 	for _, tweet := range tweets {
-		table.Append([]string{tweet.User.Name, runewidth.Truncate(tweet.Text, 80, "..."), tweetURL(tweet)})
+		table.Append([]string{tweet.User.Name, runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
 	}
 	table.Render()
 }
