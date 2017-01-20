@@ -79,6 +79,11 @@ func searchTweets(client *twitter.Client, count int, query string) ([]twitter.Tw
 	return search.Statuses, nil
 }
 
+func updateStatus(client *twitter.Client, status string) error {
+	_, _, err := client.Statuses.Update(status, nil)
+	return err
+}
+
 func main() {
 	config, err := loadConfig()
 
@@ -90,14 +95,25 @@ func main() {
 	var query string
 	var user string
 	var count int
+	var status string
 	var tweets []twitter.Tweet
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show user timeline")
 	flag.IntVar(&count, "c", 10, "Search count")
+	flag.StringVar(&status, "p", "", "Post tweet")
 	flag.Parse()
 
 	client := buildTwitterClient(config)
+
+	if len(status) > 0 {
+		err = updateStatus(client, status)
+		if err != nil {
+			fmt.Printf("twitter API Error:%v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 
 	if len(query) > 0 {
 		tweets, err = searchTweets(client, count, query)
