@@ -100,7 +100,7 @@ func main() {
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show user timeline")
-	flag.IntVar(&count, "c", 10, "Search count")
+	flag.IntVar(&count, "c", 50, "Search count")
 	flag.StringVar(&status, "p", "", "Post tweet")
 	flag.Parse()
 
