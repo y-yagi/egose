@@ -15,6 +15,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
+	"github.com/pkg/errors"
 )
 
 // Config manage config info
@@ -69,6 +70,40 @@ func readTweetFromFile() (string, error) {
 	return string(dat), nil
 }
 
+func updateStatus(egose *Egose) error {
+	var tweet string
+	var err error
+
+	if len(flag.Args()) > 0 {
+		tweet = flag.Args()[0]
+	} else {
+		tweet, err = readTweetFromFile()
+		if err != nil {
+			return errors.Wrap(err, "unexpected error")
+		}
+	}
+
+	if len(tweet) == 0 {
+		return nil
+	}
+
+	err = egose.UpdateStatus(tweet)
+	if err != nil {
+		return errors.Wrap(err, "twitter API Error")
+	}
+
+	return nil
+}
+
+func showTweets(tweets []twitter.Tweet) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"User", "Text", "URL"})
+	for _, tweet := range tweets {
+		table.Append([]string{tweet.User.Name, runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
+	}
+	table.Render()
+}
+
 func main() {
 	config, err := loadConfig()
 
@@ -81,7 +116,6 @@ func main() {
 	var user string
 	var count int
 	var status bool
-	var tweet string
 	var tweets []twitter.Tweet
 
 	flag.StringVar(&query, "q", "", "Search query")
@@ -93,24 +127,9 @@ func main() {
 	egose := NewEgose(config)
 
 	if status {
-		if len(flag.Args()) > 0 {
-			tweet = flag.Args()[0]
-		} else {
-			tweet, err = readTweetFromFile()
-
-			if err != nil {
-				fmt.Printf("Unexpected Error:%v\n", err)
-				os.Exit(1)
-			}
-		}
-		if len(tweet) == 0 {
-			// Do nothing
-			os.Exit(0)
-		}
-
-		err = egose.UpdateStatus(tweet)
+		err = updateStatus(egose)
 		if err != nil {
-			fmt.Printf("twitter API Error:%v\n", err)
+			fmt.Printf("%v\n", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -128,11 +147,5 @@ func main() {
 		fmt.Printf("twitter API Error:%v\n", err)
 		os.Exit(1)
 	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"User", "Text", "URL"})
-	for _, tweet := range tweets {
-		table.Append([]string{tweet.User.Name, runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
-	}
-	table.Render()
+	showTweets(tweets)
 }
