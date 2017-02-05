@@ -63,7 +63,7 @@ func readTweetFromFile() (string, error) {
 	msgFile := generateConfigFilePath("TWEET")
 
 	// Clean up file
-	os.Remove(msgFile)
+	_ = os.Remove(msgFile)
 	cmd := exec.Command(defaultEditor, msgFile)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
