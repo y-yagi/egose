@@ -17,6 +17,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// Config manage config info
 type Config struct {
 	TwitterConsumerKey    string `yaml:"twitterConsumerKey"`
 	TwitterConsumerSecret string `yaml:"twitterConsumerSecret"`

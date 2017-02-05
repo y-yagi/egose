@@ -5,10 +5,12 @@ import (
 	"github.com/dghubble/oauth1"
 )
 
+// Egose manage twitter related processing
 type Egose struct {
 	client *twitter.Client
 }
 
+// NewEgose generate new Egose
 func NewEgose(cfg *Config) *Egose {
 	var egose Egose
 	egose.init(cfg)
@@ -27,6 +29,7 @@ func buildTwitterClient(cfg *Config) *twitter.Client {
 	return twitter.NewClient(httpClient)
 }
 
+// GetTimelineTweets get timeline tweet
 func (e *Egose) GetTimelineTweets(count int) ([]twitter.Tweet, error) {
 	tweets, _, err := e.client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
 		Count: count,
@@ -34,6 +37,7 @@ func (e *Egose) GetTimelineTweets(count int) ([]twitter.Tweet, error) {
 	return tweets, err
 }
 
+// GetUserTimelineTweets get specified user timeline tweets
 func (e *Egose) GetUserTimelineTweets(screenName string, count int) ([]twitter.Tweet, error) {
 	tweets, _, err := e.client.Timelines.UserTimeline(&twitter.UserTimelineParams{
 		ScreenName: screenName,
@@ -42,6 +46,7 @@ func (e *Egose) GetUserTimelineTweets(screenName string, count int) ([]twitter.T
 	return tweets, err
 }
 
+// SearchTweets search tweets
 func (e *Egose) SearchTweets(count int, query string) ([]twitter.Tweet, error) {
 	search, _, err := e.client.Search.Tweets(&twitter.SearchTweetParams{
 		Query: query,
@@ -53,6 +58,7 @@ func (e *Egose) SearchTweets(count int, query string) ([]twitter.Tweet, error) {
 	return search.Statuses, nil
 }
 
+// UpdateStatus update my curent status
 func (e *Egose) UpdateStatus(status string) error {
 	_, _, err := e.client.Statuses.Update(status, nil)
 	return err
