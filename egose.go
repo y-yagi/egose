@@ -6,6 +6,7 @@ import (
 	"html"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -24,14 +25,18 @@ type config struct {
 	TwitterAccessSecret   string `yaml:"twitterAccessSecret"`
 }
 
-func loadConfig() (*config, error) {
+func generateConfigFilePath(filename string) string {
 	home := os.Getenv("HOME")
 	if home == "" && runtime.GOOS == "windows" {
 		home = os.Getenv("APPDATA")
 	}
 
-	fname := filepath.Join(home, ".config", "egose", "config.yml")
-	buf, err := ioutil.ReadFile(fname)
+	return filepath.Join(home, ".config", "egose", filename)
+}
+
+func loadConfig() (*config, error) {
+	filename := generateConfigFilePath("config.yml")
+	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +56,25 @@ func buildTwitterClient(cfg *config) *twitter.Client {
 	httpClient := oauthConfig.Client(oauth1.NoContext, token)
 
 	return twitter.NewClient(httpClient)
+}
+
+func readTweetFromFile() (string, error) {
+	const defaultEditor = "vi"
+	msgFile := generateConfigFilePath("TWEET")
+
+	// Clean up file
+	os.Remove(msgFile)
+	cmd := exec.Command(defaultEditor, msgFile)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	dat, _ := ioutil.ReadFile(msgFile)
+	return string(dat), nil
 }
 
 func getTimelineTweets(client *twitter.Client, count int) ([]twitter.Tweet, error) {
@@ -95,19 +119,35 @@ func main() {
 	var query string
 	var user string
 	var count int
-	var status string
+	var status bool
+	var tweet string
 	var tweets []twitter.Tweet
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show user timeline")
 	flag.IntVar(&count, "c", 50, "Search count")
-	flag.StringVar(&status, "p", "", "Post tweet")
+	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.Parse()
 
 	client := buildTwitterClient(config)
 
-	if len(status) > 0 {
-		err = updateStatus(client, status)
+	if status {
+		if len(flag.Args()) > 0 {
+			tweet = flag.Args()[0]
+		} else {
+			tweet, err = readTweetFromFile()
+
+			if err != nil {
+				fmt.Printf("Unexpected Error:%v\n", err)
+				os.Exit(1)
+			}
+		}
+		if len(tweet) == 0 {
+			// Do nothing
+			os.Exit(0)
+		}
+
+		err = updateStatus(client, tweet)
 		if err != nil {
 			fmt.Printf("twitter API Error:%v\n", err)
 			os.Exit(1)
