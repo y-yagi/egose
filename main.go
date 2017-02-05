@@ -13,12 +13,11 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 )
 
-type config struct {
+type Config struct {
 	TwitterConsumerKey    string `yaml:"twitterConsumerKey"`
 	TwitterConsumerSecret string `yaml:"twitterConsumerSecret"`
 	TwitterAccessToken    string `yaml:"twitterAccessToken"`
@@ -34,28 +33,20 @@ func generateConfigFilePath(filename string) string {
 	return filepath.Join(home, ".config", "egose", filename)
 }
 
-func loadConfig() (*config, error) {
+func loadConfig() (*Config, error) {
 	filename := generateConfigFilePath("config.yml")
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	var cfg config
+	var cfg Config
 	err = yaml.Unmarshal(buf, &cfg)
 	return &cfg, err
 }
 
 func tweetURL(tweet twitter.Tweet) string {
 	return fmt.Sprintf("https://twitter.com/%v/status/%v", tweet.User.ScreenName, tweet.ID)
-}
-
-func buildTwitterClient(cfg *config) *twitter.Client {
-	oauthConfig := oauth1.NewConfig(cfg.TwitterConsumerKey, cfg.TwitterConsumerSecret)
-	token := oauth1.NewToken(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
-	httpClient := oauthConfig.Client(oauth1.NoContext, token)
-
-	return twitter.NewClient(httpClient)
 }
 
 func readTweetFromFile() (string, error) {
@@ -75,37 +66,6 @@ func readTweetFromFile() (string, error) {
 
 	dat, _ := ioutil.ReadFile(msgFile)
 	return string(dat), nil
-}
-
-func getTimelineTweets(client *twitter.Client, count int) ([]twitter.Tweet, error) {
-	tweets, _, err := client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-		Count: count,
-	})
-	return tweets, err
-}
-
-func getUserTimelineTweets(client *twitter.Client, screenName string, count int) ([]twitter.Tweet, error) {
-	tweets, _, err := client.Timelines.UserTimeline(&twitter.UserTimelineParams{
-		ScreenName: screenName,
-		Count:      count,
-	})
-	return tweets, err
-}
-
-func searchTweets(client *twitter.Client, count int, query string) ([]twitter.Tweet, error) {
-	search, _, err := client.Search.Tweets(&twitter.SearchTweetParams{
-		Query: query,
-		Count: count,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return search.Statuses, nil
-}
-
-func updateStatus(client *twitter.Client, status string) error {
-	_, _, err := client.Statuses.Update(status, nil)
-	return err
 }
 
 func main() {
@@ -129,7 +89,7 @@ func main() {
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.Parse()
 
-	client := buildTwitterClient(config)
+	egose := NewEgose(config)
 
 	if status {
 		if len(flag.Args()) > 0 {
@@ -147,7 +107,7 @@ func main() {
 			os.Exit(0)
 		}
 
-		err = updateStatus(client, tweet)
+		err = egose.UpdateStatus(tweet)
 		if err != nil {
 			fmt.Printf("twitter API Error:%v\n", err)
 			os.Exit(1)
@@ -156,11 +116,11 @@ func main() {
 	}
 
 	if len(query) > 0 {
-		tweets, err = searchTweets(client, count, query)
+		tweets, err = egose.SearchTweets(count, query)
 	} else if len(user) > 0 {
-		tweets, err = getUserTimelineTweets(client, user, count)
+		tweets, err = egose.GetUserTimelineTweets(user, count)
 	} else {
-		tweets, err = getTimelineTweets(client, count)
+		tweets, err = egose.GetTimelineTweets(count)
 	}
 
 	if err != nil {
