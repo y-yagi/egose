@@ -89,7 +89,8 @@ func updateStatus(egose *Egose) error {
 
 	err = egose.UpdateStatus(tweet)
 	if err != nil {
-		return errors.Wrap(err, "twitter API Error")
+		msg := fmt.Sprintf("twitter API Error.\ntweet: %v", tweet)
+		return errors.Wrap(err, msg)
 	}
 
 	return nil
