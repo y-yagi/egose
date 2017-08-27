@@ -13,10 +13,13 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/jroimartin/gocui"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 )
+
+var tweets []twitter.Tweet
 
 // Config manage config info
 type Config struct {
@@ -96,13 +99,33 @@ func updateStatus(egose *Egose) error {
 	return nil
 }
 
-func showTweets(tweets []twitter.Tweet) {
+func showTweetsWithTable(tweets []twitter.Tweet) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"User", "Text", "URL"})
 	for _, tweet := range tweets {
 		table.Append([]string{tweet.User.Name, runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
 	}
 	table.Render()
+}
+
+func showTweetsWithGui() error {
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		return errors.Wrap(err, "gui create error")
+	}
+	defer g.Close()
+
+	g.Cursor = true
+	g.SetManagerFunc(layout)
+
+	if err := keybindings(g); err != nil {
+		return errors.Wrap(err, "key bindings error")
+	}
+
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+		return errors.Wrap(err, "unexpected error")
+	}
+	return nil
 }
 
 func main() {
@@ -117,7 +140,6 @@ func main() {
 	var user string
 	var count int
 	var status bool
-	var tweets []twitter.Tweet
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show user timeline")
@@ -148,5 +170,9 @@ func main() {
 		fmt.Printf("twitter API Error:%v\n", err)
 		os.Exit(1)
 	}
-	showTweets(tweets)
+
+	if err = showTweetsWithGui(); err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
 }
