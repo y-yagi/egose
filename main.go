@@ -100,7 +100,7 @@ func showTweets(tweets []twitter.Tweet) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"User", "Text", "URL"})
 	for _, tweet := range tweets {
-		table.Append([]string{tweet.User.Name, runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
+		table.Append([]string{runewidth.Truncate(tweet.User.Name, 30, "..."), runewidth.Truncate(html.UnescapeString(tweet.Text), 80, "..."), tweetURL(tweet)})
 	}
 	table.Render()
 }
