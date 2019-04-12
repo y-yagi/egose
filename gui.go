@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+	"os/exec"
+	"regexp"
 
+	"github.com/dghubble/go-twitter/twitter"
+	runewidth "github.com/mattn/go-runewidth"
 	"github.com/y-yagi/gocui"
 )
 
@@ -14,7 +17,7 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, getLine); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, openLink); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
@@ -35,7 +38,7 @@ func layout(g *gocui.Gui) error {
 		v.SelFgColor = gocui.ColorBlack
 
 		for _, tweet := range tweets {
-			fmt.Fprintln(v, tweet.Text)
+			fmt.Fprintln(v, buildLine(tweet))
 		}
 	}
 	return nil
@@ -45,30 +48,21 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func getLine(g *gocui.Gui, v *gocui.View) error {
-	var l string
-	var err error
+func buildLine(tweet twitter.Tweet) string {
+	re := regexp.MustCompile(`\r?\n`)
+	return "[" + runewidth.Truncate(tweet.User.Name, 30, "...") + "] " + re.ReplaceAllString(tweet.Text, " ")
+}
+
+func openLink(g *gocui.Gui, v *gocui.View) error {
+	browser := "google-chrome"
 
 	if v == nil {
 		v = g.Views()[0]
 	}
 
 	_, cy := v.Cursor()
-	if l, err = v.Line(cy); err != nil {
-		l = ""
-	}
-
-	maxX, maxY := g.Size()
-	if v, err := g.SetView("msg", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		fmt.Fprintln(v, l+":"+strconv.Itoa(cy))
-		if _, err := g.SetCurrentView("msg"); err != nil {
-			return err
-		}
-	}
-	return nil
+	tweet := tweets[cy]
+	return exec.Command(browser, tweetURL(tweet)).Run()
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
