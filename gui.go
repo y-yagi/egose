@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/jroimartin/gocui"
+	"github.com/y-yagi/gocui"
 )
 
 func keybindings(g *gocui.Gui) error {

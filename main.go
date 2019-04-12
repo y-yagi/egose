@@ -13,10 +13,10 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/jroimartin/gocui"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"github.com/y-yagi/gocui"
 )
 
 var tweets []twitter.Tweet
