@@ -143,7 +143,7 @@ func main() {
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show user timeline")
-	flag.IntVar(&count, "c", 60, "Search count")
+	flag.IntVar(&count, "c", 50, "Search count")
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.Parse()
 
