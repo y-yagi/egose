@@ -20,6 +20,7 @@ import (
 )
 
 var tweets []twitter.Tweet
+var keyEntered string
 
 // Config manage config info
 type Config struct {
@@ -145,6 +146,7 @@ func main() {
 	flag.StringVar(&user, "u", "", "Show user timeline")
 	flag.IntVar(&count, "c", 50, "Search count")
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
+	flag.StringVar(&keyEntered, "e", "browser", "Specify action when key entered")
 	flag.Parse()
 
 	egose := NewEgose(config)

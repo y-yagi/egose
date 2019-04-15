@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"regexp"
 
+	"github.com/atotto/clipboard"
 	"github.com/dghubble/go-twitter/twitter"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/y-yagi/gocui"
@@ -23,7 +24,7 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", 'k', gocui.ModNone, cursorUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, openLink); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, enter); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
@@ -59,16 +60,20 @@ func buildLine(tweet twitter.Tweet) string {
 	return "[" + runewidth.Truncate(tweet.User.Name, 30, "...") + "] " + re.ReplaceAllString(tweet.Text, " ")
 }
 
-func openLink(g *gocui.Gui, v *gocui.View) error {
-	browser := "google-chrome"
-
+func enter(g *gocui.Gui, v *gocui.View) error {
 	if v == nil {
 		v = g.Views()[0]
 	}
 
 	_, cy := v.Cursor()
 	tweet := tweets[cy]
-	return exec.Command(browser, tweetURL(tweet)).Run()
+
+	if keyEntered == "copy" {
+		return clipboard.WriteAll(tweetURL(tweet))
+	} else {
+		browser := "google-chrome"
+		return exec.Command(browser, tweetURL(tweet)).Run()
+	}
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
