@@ -8,46 +8,25 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/dghubble/go-twitter/twitter"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"github.com/y-yagi/configure"
 	"github.com/y-yagi/gocui"
 )
 
 var tweets []twitter.Tweet
 
+const cmd = "egose"
+
 // Config manage config info
 type Config struct {
-	TwitterConsumerKey    string `yaml:"twitterConsumerKey"`
-	TwitterConsumerSecret string `yaml:"twitterConsumerSecret"`
-	TwitterAccessToken    string `yaml:"twitterAccessToken"`
-	TwitterAccessSecret   string `yaml:"twitterAccessSecret"`
-}
-
-func generateConfigFilePath(filename string) string {
-	home := os.Getenv("HOME")
-	if home == "" && runtime.GOOS == "windows" {
-		home = os.Getenv("APPDATA")
-	}
-
-	return filepath.Join(home, ".config", "egose", filename)
-}
-
-func loadConfig() (*Config, error) {
-	filename := generateConfigFilePath("config.yml")
-	buf, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	var cfg Config
-	err = yaml.Unmarshal(buf, &cfg)
-	return &cfg, err
+	TwitterConsumerKey    string `toml:"twitterConsumerKey"`
+	TwitterConsumerSecret string `toml:"twitterConsumerSecret"`
+	TwitterAccessToken    string `toml:"twitterAccessToken"`
+	TwitterAccessSecret   string `toml:"twitterAccessSecret"`
 }
 
 func tweetURL(tweet twitter.Tweet) string {
@@ -56,7 +35,8 @@ func tweetURL(tweet twitter.Tweet) string {
 
 func readTweetFromFile() (string, error) {
 	const defaultEditor = "vi"
-	msgFile := generateConfigFilePath("TWEET")
+
+	msgFile := filepath.Join(configure.ConfigDir(cmd), "TWEET")
 
 	// Clean up file
 	_ = os.Remove(msgFile)
@@ -129,8 +109,9 @@ func showTweetsWithGui() error {
 }
 
 func main() {
-	config, err := loadConfig()
+	var cfg Config
 
+	err := configure.Load(cmd, &cfg)
 	if err != nil {
 		fmt.Printf("Config file load Error: %v\nPlease create a config file.\n", err)
 		os.Exit(1)
@@ -147,7 +128,7 @@ func main() {
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.Parse()
 
-	egose := NewEgose(config)
+	egose := NewEgose(&cfg)
 
 	if status {
 		err = updateStatus(egose)
