@@ -72,7 +72,7 @@ func enter(g *gocui.Gui, v *gocui.View) error {
 		return clipboard.WriteAll(tweetURL(tweet))
 	} else {
 		browser := "google-chrome"
-		return exec.Command(browser, tweetURL(tweet)).Run()
+		return exec.Command(browser, tweetURL(tweet)).Start()
 	}
 }
 
