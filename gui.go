@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"github.com/atotto/clipboard"
 	"github.com/dghubble/go-twitter/twitter"
@@ -68,9 +70,18 @@ func enter(g *gocui.Gui, v *gocui.View) error {
 	_, cy := v.Cursor()
 	tweet := tweets[cy]
 
-	if keyEntered == "copy" {
+	switch keyEntered {
+	case "copy":
 		return clipboard.WriteAll(tweetURL(tweet))
-	} else {
+	case "gvim":
+		tweetU := tweetURL(tweet)
+		os.Chdir("/tmp")
+		if err := exec.Command("wget", tweetU).Run(); err != nil {
+			return err
+		}
+		paths := strings.Split(tweetU, "/")
+		return exec.Command("gvim", paths[len(paths)-1]).Start()
+	default:
 		browser := "google-chrome"
 		return exec.Command(browser, tweetURL(tweet)).Start()
 	}
