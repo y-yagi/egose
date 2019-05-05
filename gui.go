@@ -93,13 +93,17 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	cx, cy := v.Cursor()
+	ox, oy := v.Origin()
+
 	cy += 1
-	if cy >= len(tweets) {
+	if cy+oy >= len(tweets) {
 		cy = 0
+		if err := v.SetOrigin(ox, 0); err != nil {
+			return err
+		}
 	}
 
 	if err := v.SetCursor(cx, cy); err != nil {
-		ox, oy := v.Origin()
 		if err := v.SetOrigin(ox, oy+1); err != nil {
 			return err
 		}
@@ -114,11 +118,19 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
+	_, maxY := g.Size()
 
 	cy -= 1
 	if cy < 0 {
 		cy = len(tweets) - 1
 	}
+
+	if cy > maxY {
+		if err := v.SetOrigin(ox, cy); err != nil {
+			return err
+		}
+	}
+
 	if err := v.SetCursor(cx, cy); err != nil && oy > 0 {
 		if err := v.SetOrigin(ox, oy-1); err != nil {
 			return err
