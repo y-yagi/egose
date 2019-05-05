@@ -165,7 +165,7 @@ func main() {
 	} else if len(user) > 0 {
 		tweets, err = egose.GetUserTimelineTweets(user, count)
 	} else {
-		tweets, err = egose.GetTimelineTweets(count)
+		tweets, err = egose.GetDebugTweets(count)
 	}
 
 	if err != nil {

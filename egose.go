@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 )
@@ -35,6 +37,16 @@ func (e *Egose) GetTimelineTweets(count int) ([]twitter.Tweet, error) {
 		Count: count,
 	})
 	return tweets, err
+}
+
+func (e *Egose) GetDebugTweets(count int) ([]twitter.Tweet, error) {
+	var tweets []twitter.Tweet
+	for i := 0; i < count; i++ {
+		u := twitter.User{Name: strconv.Itoa(i)}
+		tweet := twitter.Tweet{Text: "text" + strconv.Itoa(i), User: &u}
+		tweets = append(tweets, tweet)
+	}
+	return tweets, nil
 }
 
 // GetUserTimelineTweets get specified user timeline tweets
