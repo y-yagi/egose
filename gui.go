@@ -59,7 +59,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 func buildLine(tweet twitter.Tweet) string {
 	re := regexp.MustCompile(`\r?\n`)
-	return "[" + runewidth.Truncate(tweet.User.Name, 30, "...") + "] " + re.ReplaceAllString(tweet.Text, " ")
+	return "[" + runewidth.Truncate(tweet.User.Name+"@"+tweet.User.ScreenName, 30, "...") + "] " + re.ReplaceAllString(tweet.Text, " ")
 }
 
 func enter(g *gocui.Gui, v *gocui.View) error {
