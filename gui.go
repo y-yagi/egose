@@ -68,7 +68,8 @@ func enter(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	_, cy := v.Cursor()
-	tweet := tweets[cy]
+	_, oy := v.Origin()
+	tweet := tweets[cy+oy]
 
 	switch keyEntered {
 	case "copy":
