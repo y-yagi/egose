@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -139,11 +140,13 @@ func main() {
 
 	var query string
 	var user string
+	var list string
 	var count int
 	var status bool
 
 	flag.StringVar(&query, "q", "", "Search query")
-	flag.StringVar(&user, "u", "", "Show user timeline")
+	flag.StringVar(&user, "u", "", "Show specified user timeline")
+	flag.StringVar(&list, "l", "", "Show specified list timeline")
 	flag.IntVar(&count, "c", 50, "Search count")
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.StringVar(&keyEntered, "e", "browser", "Specify action when key entered")
@@ -164,6 +167,14 @@ func main() {
 		tweets, err = egose.SearchTweets(count, query)
 	} else if len(user) > 0 {
 		tweets, err = egose.GetUserTimelineTweets(user, count)
+	} else if len(list) > 0 {
+		if strings.Count(list, "/") == 0 {
+			fmt.Printf("Please specify owner name and list name. e.g. TwitterDev/national-parks\n")
+			os.Exit(1)
+		}
+
+		ownerAndList := strings.Split(list, "/")
+		tweets, err = egose.GetListTweets(ownerAndList[0], ownerAndList[1], count)
 	} else {
 		tweets, err = egose.GetTimelineTweets(count)
 	}

@@ -75,3 +75,13 @@ func (e *Egose) UpdateStatus(status string) error {
 	_, _, err := e.client.Statuses.Update(status, nil)
 	return err
 }
+
+// GetListTweets get list Statuses
+func (e *Egose) GetListTweets(ownerName, listName string, count int) ([]twitter.Tweet, error) {
+	tweets, _, err := e.client.Lists.Statuses(&twitter.ListsStatusesParams{
+		OwnerScreenName: ownerName,
+		Slug:            listName,
+		Count:           count,
+	})
+	return tweets, err
+}
