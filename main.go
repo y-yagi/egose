@@ -149,7 +149,7 @@ func main() {
 	flag.StringVar(&list, "l", "", "Show specified list timeline")
 	flag.IntVar(&count, "c", 50, "Search count")
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
-	flag.StringVar(&keyEntered, "e", "browser", "Specify action when key entered")
+	flag.StringVar(&keyEntered, "e", "browser", "Specify action when key entered(options: copy / gvim)")
 	flag.Parse()
 
 	egose := NewEgose(config)
