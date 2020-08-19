@@ -77,11 +77,11 @@ func (e *Egose) UpdateStatus(status string) error {
 }
 
 // GetListTweets get list Statuses
-func (e *Egose) GetListTweets(ownerName, listName string, count int) ([]twitter.Tweet, error) {
+func (e *Egose) GetListTweets(listID string, count int) ([]twitter.Tweet, error) {
+	id, _ := strconv.ParseInt(listID, 10, 64)
 	tweets, _, err := e.client.Lists.Statuses(&twitter.ListsStatusesParams{
-		OwnerScreenName: ownerName,
-		Slug:            listName,
-		Count:           count,
+		ListID: id,
+		Count:  count,
 	})
 	return tweets, err
 }

@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -168,13 +167,7 @@ func main() {
 	} else if len(user) > 0 {
 		tweets, err = egose.GetUserTimelineTweets(user, count)
 	} else if len(list) > 0 {
-		if strings.Count(list, "/") == 0 {
-			fmt.Printf("Please specify owner name and list name. e.g. TwitterDev/national-parks\n")
-			os.Exit(1)
-		}
-
-		ownerAndList := strings.Split(list, "/")
-		tweets, err = egose.GetListTweets(ownerAndList[0], ownerAndList[1], count)
+		tweets, err = egose.GetListTweets(list, count)
 	} else {
 		tweets, err = egose.GetTimelineTweets(count)
 	}
