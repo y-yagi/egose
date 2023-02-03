@@ -85,3 +85,12 @@ func (e *Egose) GetListTweets(listID string, count int) ([]twitter.Tweet, error)
 	})
 	return tweets, err
 }
+
+func (e *Egose) GetListMembers(listID string) (*twitter.Members, error) {
+	id, _ := strconv.ParseInt(listID, 10, 64)
+	members, _, err := e.client.Lists.Members(&twitter.ListsMembersParams{
+		ListID: id,
+		Count:  100, // TODO: allow to specify via command line
+	})
+	return members, err
+}

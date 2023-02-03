@@ -140,12 +140,14 @@ func main() {
 	var query string
 	var user string
 	var list string
+	var listMembers string
 	var count int
 	var status bool
 
 	flag.StringVar(&query, "q", "", "Search query")
 	flag.StringVar(&user, "u", "", "Show specified user timeline")
 	flag.StringVar(&list, "l", "", "Show specified list timeline")
+	flag.StringVar(&listMembers, "lm", "", "Show list members In the list")
 	flag.IntVar(&count, "c", 50, "Search count")
 	flag.BoolVar(&status, "p", false, "Post tweet. If you specify a message, that message will be sent as is. If you do not specify a message, the editor starts up.")
 	flag.StringVar(&keyEntered, "e", "browser", "Specify action when key entered(options: copy / gvim)")
@@ -159,6 +161,20 @@ func main() {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
 		}
+		os.Exit(0)
+	}
+
+	if len(listMembers) != 0 {
+		members, err := egose.GetListMembers(listMembers)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			os.Exit(1)
+		}
+
+		for _, user := range members.Users {
+			fmt.Printf("%s(%s) https://twitter.com/%s\n", user.Name, user.IDStr, user.ScreenName)
+		}
+
 		os.Exit(0)
 	}
 
